@@ -1,11 +1,11 @@
 name: Stock Check
 
 on:
-  schedule:
-    # 60分ごと(毎時0分)に実行。GitHub Actionsの仕様上、実行時刻は
-    # 数分〜十数分ずれることがあります。
-    - cron: "0 * * * *"
-  workflow_dispatch: {}  # 手動実行用ボタン
+  repository_dispatch:
+    # cron-job.org から GitHub API 経由でこのイベントを送ってもらうことで起動する。
+    # event_type は cron-job.org 側のリクエストボディと一致させる必要がある。
+    types: [stock-check]
+  workflow_dispatch: {}  # 手動実行(Actionsタブの「Run workflow」)用
 
 permissions:
   contents: write  # データファイルをコミットするために必要
