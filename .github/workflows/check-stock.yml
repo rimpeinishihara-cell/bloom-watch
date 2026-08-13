@@ -1,0 +1,39 @@
+name: Stock Check
+
+on:
+  schedule:
+    # 60分ごと(毎時0分)に実行。GitHub Actionsの仕様上、実行時刻は
+    # 数分〜十数分ずれることがあります。
+    - cron: "0 * * * *"
+  workflow_dispatch: {}  # 手動実行用ボタン
+
+permissions:
+  contents: write  # データファイルをコミットするために必要
+
+jobs:
+  check-stock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run stock check
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: python check_stock.py
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/stock_history.csv
+          git diff --staged --quiet || git commit -m "在庫データ更新 $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          git push
